@@ -183,25 +183,8 @@ pane_cwd() {
 }
 
 # Map bead prefixes to repositories, so an ID resolves no matter which pane it
-# was clicked from. Reading the first line of issues.jsonl is far cheaper than
-# starting bd in every candidate repo.
-ROOTS="${BEADS_POPOVER_ROOTS:-$HOME/co:$HOME/src:$HOME/code:$HOME/projects}"
-INDEX="${BEADS_POPOVER_INDEX:-${TMPDIR:-/tmp}/beads-popover-index.tsv}"
-
-build_index() {
-  local root repo id
-  : >"$INDEX"
-  IFS=':' read -ra roots <<<"$ROOTS"
-  for root in "${roots[@]}"; do
-    [[ -d "$root" ]] || continue
-    for f in "$root"/*/.beads/issues.jsonl; do
-      [[ -r "$f" ]] || continue
-      repo=$(dirname "$(dirname "$f")")
-      id=$(head -1 "$f" 2>/dev/null | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-      [[ -n "$id" ]] && printf '%s\t%s\n' "${id%%-*}" "$repo" >>"$INDEX"
-    done
-  done
-}
+# was clicked from. build_index, ROOTS and INDEX live in lib/index.sh.
+source "$ROOT/scripts/lib/index.sh"
 
 # Candidate repos for this ID: the clicking pane first (cheapest and usually
 # right), then every repo whose prefix matches.
@@ -221,15 +204,25 @@ candidates() {
   printf '%s\n' "$hits"
 }
 
-resolve_cwd() {
-  [[ -n "${BEADS_POPOVER_CWD:-}" ]] && { printf '%s' "$BEADS_POPOVER_CWD"; return; }
+first_holder() {
   local c
   while read -r c; do
     [[ -n "$c" && -d "$c" ]] || continue
     if (cd "$c" && bd show "$bead_id" >/dev/null 2>&1); then
-      printf '%s' "$c"; return
+      printf '%s' "$c"; return 0
     fi
-  done < <(candidates)
+  done
+  return 1
+}
+
+resolve_cwd() {
+  [[ -n "${BEADS_POPOVER_CWD:-}" ]] && { printf '%s' "$BEADS_POPOVER_CWD"; return; }
+  first_holder < <(candidates) && return
+  # The prefix matched, but no indexed repo holds the bead: the index is stale
+  # (it named a checkout whose database never saw this bead). Rebuild once and
+  # retry, or a stale entry masks the right repo forever.
+  build_index
+  first_holder < <(candidates) && return
   printf ''
 }
 
