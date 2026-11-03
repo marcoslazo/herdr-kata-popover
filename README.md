@@ -19,6 +19,29 @@ herdr plugin link /path/to/herdr-kata-popover
 
 Requires `kata` (configured against your kata server), `jq` and `perl` on `PATH`.
 
+## Keyboard: when Ctrl-click does not reach Herdr
+
+Herdr routes link handlers only on **Ctrl**-click (also on macOS; Cmd-click and
+plain clicks never reach plugins), and only with `ui.mouse_capture` on. Some
+terminals never deliver that click: macOS **Terminal.app** turns Ctrl-click
+into a right-click. For those, bind the action to a key in
+`~/.config/herdr/config.toml`:
+
+```toml
+[[keys.command]]
+key = "prefix+i"
+type = "plugin_action"
+command = "kata.popover.show-kata"
+description = "kata: open issue refs on screen"
+```
+
+Then `herdr server reload-config`. The action scans the selected text, or else
+the focused pane's last 300 lines (`KATA_POPOVER_SCAN_LINES`), for kata refs.
+One ref opens directly; several open a numbered picker (most recent first,
+`1`-`9` to open, Enter for the first, `q` to cancel). Pressed inside the detail
+pane, it offers that issue's linked issues — keyboard navigation without
+clicks.
+
 ## How it works
 
 Herdr detects hyperlinks in pane output and routes Ctrl-clicks matching a

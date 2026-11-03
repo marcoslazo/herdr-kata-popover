@@ -36,9 +36,9 @@ link() {
 }
 
 @test "linkify: keeps capitals and dots in the project name" {
-  run lk "Driving-lessons-simulator#ab12 and web.v2#zz99"
+  run lk "Sample-Project#ab12 and web.v2#zz99"
   [ "$status" -eq 0 ]
-  [ "$output" = "$(link Driving-lessons-simulator/ab12 Driving-lessons-simulator#ab12) and $(link web.v2/zz99 web.v2#zz99)" ]
+  [ "$output" = "$(link Sample-Project/ab12 Sample-Project#ab12) and $(link web.v2/zz99 web.v2#zz99)" ]
 }
 
 @test "linkify: matches a ref that starts immediately after an SGR" {
