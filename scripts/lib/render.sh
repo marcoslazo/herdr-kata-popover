@@ -8,7 +8,7 @@
 
 # Wrap kata refs in OSC 8 links pointing back at our own handler.
 #
-# kata short ids are four lowercase base32 characters (p2rg, vjn8), which is
+# kata short ids are four lowercase base32 characters (q7xm, r4tz), which is
 # far too loose to match in free text: shas, words and hex all collide. So only
 # unambiguous forms are linked:
 #

@@ -33,18 +33,18 @@ key() { bash "$ROOT/scripts/show-kata.sh"; }
 click() { HERDR_PLUGIN_CLICKED_URL="$1" bash "$ROOT/scripts/show-kata.sh"; }
 
 @test "qualified URL selects project#id and opens a split" {
-  run click "https://kata.invalid/pirula-box/p2rg"
+  run click "https://kata.invalid/sample-app/q7xm"
   [ "$status" -eq 0 ]
-  [ "$(sed -n 1p "$CURRENT")" = "pirula-box#p2rg" ]
+  [ "$(sed -n 1p "$CURRENT")" = "sample-app#q7xm" ]
   grep -q -- "--entrypoint detail --placement split" "$CALLS"
   grep -q -- "--target-pane p1" "$CALLS"
-  grep -q -- "KATA_REF=pirula-box#p2rg" "$CALLS"
+  grep -q -- "KATA_REF=sample-app#q7xm" "$CALLS"
 }
 
 @test "bare URL selects the id with the pane's cwd" {
-  run click "https://kata.invalid/vjn8/"
+  run click "https://kata.invalid/r4tz/"
   [ "$status" -eq 0 ]
-  [ "$(sed -n 1p "$CURRENT")" = "vjn8" ]
+  [ "$(sed -n 1p "$CURRENT")" = "r4tz" ]
   [ "$(sed -n 2p "$CURRENT")" = "/tmp" ]
 }
 
@@ -55,7 +55,7 @@ click() { HERDR_PLUGIN_CLICKED_URL="$1" bash "$ROOT/scripts/show-kata.sh"; }
 }
 
 @test "a malformed id opens the pane with an error" {
-  run click "https://kata.invalid/pirula-box/NOPE!"
+  run click "https://kata.invalid/sample-app/NOPE!"
   [ "$status" -eq 0 ]
   [ -z "$(sed -n 1p "$CURRENT")" ]
   grep -q "Not a kata issue id" "$CURRENT"
@@ -82,22 +82,22 @@ TXT
 }
 
 @test "keyboard: a single ref opens directly" {
-  printf 'see [x](https://kata.invalid/pirula-box/p2rg) and pirula-box#p2rg\n' >"$PANE_TEXT"
+  printf 'see [x](https://kata.invalid/sample-app/q7xm) and sample-app#q7xm\n' >"$PANE_TEXT"
   run key
   [ "$status" -eq 0 ]
-  [ "$(sed -n 1p "$CURRENT")" = "pirula-box#p2rg" ]
+  [ "$(sed -n 1p "$CURRENT")" = "sample-app#q7xm" ]
   [ ! -e "$PICKF" ]
 }
 
 @test "keyboard: selected text wins over the pane" {
   printf 'a#aaaa b#bbbb\n' >"$PANE_TEXT"
-  HERDR_PLUGIN_CONTEXT_JSON='{"workspace_id":"w1","focused_pane_id":"p1","selected_text":"pirula-box#vjn8"}' run key
+  HERDR_PLUGIN_CONTEXT_JSON='{"workspace_id":"w1","focused_pane_id":"p1","selected_text":"sample-app#r4tz"}' run key
   [ "$status" -eq 0 ]
-  [ "$(sed -n 1p "$CURRENT")" = "pirula-box#vjn8" ]
+  [ "$(sed -n 1p "$CURRENT")" = "sample-app#r4tz" ]
 }
 
 @test "keyboard: no refs shows an explanation" {
-  printf 'only a bare p2rg and a sha ca3c89d\n' >"$PANE_TEXT"
+  printf 'only a bare q7xm and a sha ca3c89d\n' >"$PANE_TEXT"
   run key
   [ "$status" -eq 0 ]
   grep -q "No kata refs found" "$CURRENT"

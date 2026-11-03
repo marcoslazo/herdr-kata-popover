@@ -21,7 +21,7 @@ $START
 
 When mentioning a kata issue, always write it as a markdown link to
 \`https://kata.invalid/<project>/<short_id>\` with the qualified ref as text, e.g.
-[pirula-box#p2rg](https://kata.invalid/pirula-box/p2rg) — never as bare text.
+[sample-app#q7xm](https://kata.invalid/sample-app/q7xm) — never as bare text.
 Herdr's Kata Popover plugin opens the issue on Ctrl-click. Use the project name
 from \`.kata.toml\` or \`kata\` output; if unknown, link \`https://kata.invalid/<short_id>\`.
 $END

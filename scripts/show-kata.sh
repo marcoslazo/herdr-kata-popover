@@ -229,8 +229,8 @@ fi
 # e.g. "(https://kata.invalid/p/abcd)," — the manifest pattern tolerates it.
 url=$(printf '%s' "$url" | sed -E "s/[]).,;:!?'\">]+\$//")
 
-# https://kata.invalid/pirula-box/p2rg  ->  project=pirula-box id=p2rg
-# https://kata.invalid/p2rg             ->  project=""         id=p2rg
+# https://kata.invalid/sample-app/q7xm  ->  project=sample-app id=q7xm
+# https://kata.invalid/q7xm             ->  project=""         id=q7xm
 path="${url#*://}"
 path="${path#kata.invalid/}"
 path="${path%/}"

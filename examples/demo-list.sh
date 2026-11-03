@@ -3,7 +3,7 @@
 # are Ctrl-clickable in Herdr.
 #
 # Usage: examples/demo-list.sh <project> [kata list args...]
-#   e.g. examples/demo-list.sh pirula-box --status open
+#   e.g. examples/demo-list.sh sample-app --status open
 set -uo pipefail
 
 [[ $# -ge 1 ]] || { echo "usage: $0 <project> [kata list args...]" >&2; exit 2; }
