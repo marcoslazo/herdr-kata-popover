@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Print `bd list` with every bead ID wrapped as an OSC 8 hyperlink, so the IDs
-# are Ctrl-clickable in Herdr. Handy for demos and for seeing what the plugin
-# feels like before deciding whether to patch bd itself.
+# Print `kata list` with every issue id wrapped as an OSC 8 hyperlink, so the ids
+# are Ctrl-clickable in Herdr.
 #
-# Usage: examples/demo-list.sh [bd list args...]
+# Usage: examples/demo-list.sh <project> [kata list args...]
+#   e.g. examples/demo-list.sh pirula-box --status open
 set -uo pipefail
 
-bd list "$@" 2>&1 | perl -pe '
-  s{(?<![\w/.-])([a-z][a-z0-9_]*-(?=[a-z0-9]{2,8}(?![\w-]))[a-z]*[0-9][a-z0-9]*)(?![\w-])}
-   {\e]8;;https://bead.invalid/$1\e\\$1\e]8;;\e\\}gi
-'
+[[ $# -ge 1 ]] || { echo "usage: $0 <project> [kata list args...]" >&2; exit 2; }
+project="$1"; shift
+
+source "$(dirname "${BASH_SOURCE[0]}")/../scripts/lib/render.sh"
+kata list --project "$project" --agent "$@" 2>&1 | KATA_PROJECT="$project" linkify
