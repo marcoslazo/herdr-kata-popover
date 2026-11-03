@@ -1,38 +1,53 @@
-id = "beads.popover"
-name = "Beads Popover"
+id = "kata.popover"
+name = "Kata Popover"
 version = "0.1.0"
 min_herdr_version = "0.7.4"
-description = "Ctrl-click a bead ID in any pane to see its details without leaving the pane."
+description = "Ctrl-click a kata issue ref in any pane to see its details without leaving the pane."
 platforms = ["linux", "macos"]
 
 [[actions]]
-id = "show-bead"
-title = "Show bead details"
+id = "show-kata"
+title = "Show kata issue"
 contexts = ["pane", "workspace"]
-command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/show-bead.sh\""]
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/show-kata.sh\""]
+
+# Opt-in: write/remove the "kata refs as links" instruction in the global agent
+# files (CLAUDE.md, AGENTS.md…). Not a [[build]] step, so installing the plugin
+# never edits your agent config by itself. Output: `herdr plugin log`.
+[[actions]]
+id = "install-agent-instructions"
+title = "Kata: add link instruction to agent files"
+contexts = ["workspace"]
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/agent-instructions.sh\" install"]
+
+[[actions]]
+id = "uninstall-agent-instructions"
+title = "Kata: remove link instruction from agent files"
+contexts = ["workspace"]
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/agent-instructions.sh\" uninstall"]
 
 [[panes]]
 id = "detail"
-title = "Bead"
+title = "Kata"
 # Split, not popup: Herdr does not route Ctrl-clicks originating inside a plugin
-# popup, so bead IDs rendered in one are dead links. Walking a dependency tree
-# means clicking IDs inside this pane, so it has to be an ordinary pane.
+# popup, so the linked issues rendered in one would be dead links. Walking
+# related/blocking issues means clicking refs inside this pane.
 placement = "split"
-# The path must be absolute. The action passes --cwd so bd can find its
-# database, which means a relative "scripts/detail.sh" resolves against the
-# clicked pane's directory instead and the pane dies immediately.
+# The path must be absolute: the action passes --cwd (so an unqualified ref can
+# resolve through that directory's .kata.toml), which means a relative path
+# would resolve against the clicked pane's directory instead.
 #
 # env has to come first: bash prints a setlocale warning at startup when it
-# inherits macOS's locale, before any command inside -c can fix it, and the
-# warning lands in the pane as noise.
+# inherits macOS's locale, before any command inside -c can fix it.
 command = ["env", "LC_ALL=en_US.UTF-8", "bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/detail.sh\""]
 
 [[link_handlers]]
-id = "bead"
-title = "Show bead details"
-# Both schemes are claimed. bead:// is what this plugin emits: nothing can open
-# it, so a plain click cannot leak to a browser. https://bead.invalid is what
-# agents write in chat, because markdown renderers commonly drop links with an
-# unknown scheme. Dropping either one turns existing links into browser hits.
-pattern = "^(bead://|https?://bead\\.invalid/)([A-Za-z][A-Za-z0-9_]*(-[A-Za-z0-9_]+)*-[A-Za-z0-9_.]+)/?$"
-action = "show-bead"
+id = "kata"
+title = "Show kata issue"
+# https://kata.invalid/<project>/<short_id> is the canonical form: agents write it
+# as a markdown link and this plugin emits it as OSC 8. The project segment is
+# optional; without it the ref resolves through the clicked pane's .kata.toml.
+# kata:// is claimed too, in case Herdr ever routes custom schemes. .invalid is
+# reserved (RFC 2606), so a click the plugin misses cannot reach a real site.
+pattern = "^(kata://|https?://kata\\.invalid/)([A-Za-z0-9][A-Za-z0-9._-]*/)?[a-z0-9]{4,12}/?$"
+action = "show-kata"
