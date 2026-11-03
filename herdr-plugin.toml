@@ -49,5 +49,7 @@ title = "Show kata issue"
 # optional; without it the ref resolves through the clicked pane's .kata.toml.
 # kata:// is claimed too, in case Herdr ever routes custom schemes. .invalid is
 # reserved (RFC 2606), so a click the plugin misses cannot reach a real site.
-pattern = "^(kata://|https?://kata\\.invalid/)([A-Za-z0-9][A-Za-z0-9._-]*/)?[a-z0-9]{4,12}/?$"
+# Trailing punctuation is tolerated: URL detection in prose can keep the ")" or
+# "," that follows a link, and the action strips it.
+pattern = "^(kata://|https?://kata\\.invalid/)([A-Za-z0-9][A-Za-z0-9._-]*/)?[a-z0-9]{4,12}/?[\\]).,;:!?'\">]*$"
 action = "show-kata"

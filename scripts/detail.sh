@@ -123,6 +123,8 @@ render() {
 # ref in the pane silently stops responding to Ctrl-click.
 TMP="$STATE_DIR/render.$$"
 trap 'rm -f "$TMP"' EXIT
+# Closing the pane hangs us up; without this the EXIT trap never runs.
+trap 'exit 0' HUP TERM INT
 
 # Seed from the environment on first launch so the pane has content before the
 # state file is consulted.
@@ -130,21 +132,74 @@ if [[ ! -s "$CURRENT" && -n "${KATA_REF:-}" ]]; then
   printf '%s\n%s\n' "$KATA_REF" "${KATA_CWD:-$PWD}" >"$CURRENT"
 fi
 
+PICK="$STATE_DIR/pick"
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+state() { cat "$CURRENT" "$PICK" 2>/dev/null; }
+
+# Select a ref through the action script, so the back trail is kept exactly as
+# a click would keep it.
+choose() {
+  local ref="$1" cwd="$2" ws
+  ws=$(basename "$STATE_DIR")
+  [[ "$ws" == default ]] && ws=""
+  HERDR_PLUGIN_CLICKED_URL="https://kata.invalid/$(ref_path "$ref")" \
+  HERDR_PLUGIN_CONTEXT_JSON="{\"workspace_id\":\"$ws\",\"focused_pane_cwd\":\"$cwd\"}" \
+  KATA_POPOVER_CWD="$cwd" \
+    bash "$SELF_DIR/show-kata.sh" >/dev/null 2>&1
+}
+
+# Numbered list of the refs the action found; a digit opens one, Enter the
+# first (most recent), q or Esc cancels back to the issue on screen, if any.
+picker() {
+  local refs=() cwds=() ref cwd title i key snap
+  while IFS=$'\t' read -r ref cwd; do
+    [[ -n "$ref" ]] && { refs+=("$ref"); cwds+=("$cwd"); }
+  done <"$PICK"
+  snap=$(state)
+
+  printf '\033[2J\033[H\033[1mKata refs on screen\033[0m  \033[2m(most recent first)\033[0m\n\n'
+  for (( i = 0; i < ${#refs[@]}; i++ )); do
+    title=$(cd "${cwds[$i]:-$PWD}" 2>/dev/null \
+      && kata show "${refs[$i]}" --json 2>/dev/null | jq -r '.issue.title // empty' 2>/dev/null)
+    printf '  \033[1;36m%d\033[0m  %s  %s\n' $(( i + 1 )) "${refs[$i]}" \
+      "${title:-$'\033[2m(not found)\033[0m'}"
+  done
+  printf '\n\033[2m1-%d open · enter first · q cancel\033[0m\n' "${#refs[@]}"
+
+  while :; do
+    # Another selection arrived while waiting: let the main loop redraw.
+    [[ "$(state)" == "$snap" ]] || return
+    IFS= read -rsn1 -t 1 key || continue
+    case "$key" in
+      [1-9])
+        (( key <= ${#refs[@]} )) || continue
+        choose "${refs[$((key - 1))]}" "${cwds[$((key - 1))]}"; return ;;
+      "")
+        choose "${refs[0]}" "${cwds[0]}"; return ;;
+      q|Q|$'\e')
+        rm -f "$PICK"
+        [[ -n "$(sed -n '1p;3p' "$CURRENT" 2>/dev/null | tr -d '[:space:]')" ]] || exit 0
+        return ;;
+    esac
+  done
+}
+
 while :; do
-  snapshot=$(cat "$CURRENT" 2>/dev/null)
+  if [[ -s "$PICK" ]]; then picker; continue; fi
+  snapshot=$(state)
   ref=$(sed -n '1p' "$CURRENT" 2>/dev/null)
   cwd=$(sed -n '2p' "$CURRENT" 2>/dev/null)
   err=$(sed -n '3,$p' "$CURRENT" 2>/dev/null)
 
   render "$ref" "$cwd" "$err" | wrapansi "$(term_cols)" >"$TMP"
 
-  prompt="${ref:-kata} · ctrl-click a ref to follow · j/k scroll · / search · q close"
+  prompt="${ref:-kata} · ctrl-click or ${KATA_POPOVER_KEY:-prefix+i} to follow a ref · j/k scroll · / search · q close"
 
   # Watch for a new selection while the pager is up, and retire the pager when
   # one arrives so the same pane redraws with the new issue.
   ( while :; do
       sleep 0.2
-      [[ "$(cat "$CURRENT" 2>/dev/null)" != "$snapshot" ]] || continue
+      [[ "$(state)" != "$snapshot" ]] || continue
       pkill -P $$ -x less 2>/dev/null
       break
     done ) &
@@ -156,5 +211,5 @@ while :; do
   wait "$watcher" 2>/dev/null
 
   # less exited on its own (the user quit) rather than being replaced.
-  [[ "$(cat "$CURRENT" 2>/dev/null)" == "$snapshot" ]] && exit 0
+  [[ "$(state)" == "$snapshot" ]] && exit 0
 done
