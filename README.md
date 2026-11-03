@@ -49,7 +49,7 @@ plugin's `pattern` to that plugin instead of the browser. This plugin claims
 URLs under `kata.invalid`:
 
 ```
-https://kata.invalid/<project>/<short_id>    e.g. https://kata.invalid/pirula-box/p2rg
+https://kata.invalid/<project>/<short_id>    e.g. https://kata.invalid/sample-app/q7xm
 https://kata.invalid/<short_id>              resolved via the clicked pane's .kata.toml
 ```
 
@@ -59,7 +59,7 @@ site. Herdr only routes http(s) links to plugins, so a custom `kata://` scheme
 would render as inert text (the manifest claims it anyway, for the future).
 
 kata is a central tracker, so a qualified ref (`project#id`) resolves from any
-directory: `kata show 'pirula-box#p2rg'`. A bare id needs a `.kata.toml` in the
+directory: `kata show 'sample-app#q7xm'`. A bare id needs a `.kata.toml` in the
 clicked pane's directory; otherwise the pane shows kata's
 `no project bound to this workspace` error with the cwd.
 
@@ -68,7 +68,7 @@ clicked pane's directory; otherwise the pane shows kata's
 The plugin handles clicks; something still has to emit the links.
 
 **Agent output**: agents have to write refs as markdown links, e.g.
-`[pirula-box#p2rg](https://kata.invalid/pirula-box/p2rg)`. The plugin ships a
+`[sample-app#q7xm](https://kata.invalid/sample-app/q7xm)`. The plugin ships a
 script that adds that instruction to your global agent files:
 
 ```sh
@@ -84,10 +84,25 @@ refreshes the wording and `uninstall` removes exactly that block. The same is
 available from Herdr as the plugin actions *Kata: add/remove link instruction*.
 Installing the plugin does not run it on its own.
 
+**Hide the URL in Claude Code**: Claude Code only emits OSC 8 hyperlinks for
+terminals it recognises by `TERM_PROGRAM`, and `herdr` is not one of them, so
+a markdown link is printed as `sample-app#q7xm (https://kata.invalid/sample-app/q7xm)`.
+Herdr does render OSC 8, so force it for shells inside Herdr (e.g. `~/.zshrc`):
+
+```sh
+[[ "$TERM_PROGRAM" == herdr ]] && export FORCE_HYPERLINK=1
+```
+
+New Claude Code sessions then show just `sample-app#q7xm`, underlined. The link
+target stays behind it for Ctrl-click, and the keyboard picker still finds the
+visible `project#id`. Keep the qualified text: `herdr pane read` returns plain
+text without link targets, so a link labelled only `q7xm` would be invisible
+to the picker.
+
 **`kata` CLI output**: `examples/demo-list.sh <project> [args]` pipes
 `kata list --agent` through the same linkifier the pane uses.
 
-Bare 4-character ids (`p2rg`) are never linkified in free text: they collide
+Bare 4-character ids (`q7xm`) are never linkified in free text: they collide
 with shas, hex and plain words. Only `project#id` and kata's `issue=id` are.
 
 ## The detail pane

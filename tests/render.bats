@@ -30,9 +30,9 @@ link() {
 # --- linkify ---------------------------------------------------------------
 
 @test "linkify: wraps a qualified ref" {
-  run lk "see pirula-box#p2rg today"
+  run lk "see sample-app#q7xm today"
   [ "$status" -eq 0 ]
-  [ "$output" = "see $(link pirula-box/p2rg pirula-box#p2rg) today" ]
+  [ "$output" = "see $(link sample-app/q7xm sample-app#q7xm) today" ]
 }
 
 @test "linkify: keeps capitals and dots in the project name" {
@@ -42,34 +42,34 @@ link() {
 }
 
 @test "linkify: matches a ref that starts immediately after an SGR" {
-  run lk "${ESC}[36mpirula-box#p2rg${ESC}[0m"
+  run lk "${ESC}[36msample-app#q7xm${ESC}[0m"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ESC>[36m$(link pirula-box/p2rg pirula-box#p2rg)<ESC>[0m" ]
+  [ "$output" = "<ESC>[36m$(link sample-app/q7xm sample-app#q7xm)<ESC>[0m" ]
 }
 
 @test "linkify: keeps surrounding colour intact" {
-  run lk "${ESC}[33mstatus pirula-box#p2rg open${ESC}[0m"
+  run lk "${ESC}[33mstatus sample-app#q7xm open${ESC}[0m"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ESC>[33mstatus $(link pirula-box/p2rg pirula-box#p2rg) open<ESC>[0m" ]
+  [ "$output" = "<ESC>[33mstatus $(link sample-app/q7xm sample-app#q7xm) open<ESC>[0m" ]
 }
 
 @test "linkify: issue= is qualified with KATA_PROJECT" {
-  export KATA_PROJECT=pirula-box
-  run lk "- type=related issue=vjn8"
+  export KATA_PROJECT=sample-app
+  run lk "- type=related issue=r4tz"
   [ "$status" -eq 0 ]
-  [ "$output" = "- type=related issue=$(link pirula-box/vjn8 vjn8)" ]
+  [ "$output" = "- type=related issue=$(link sample-app/r4tz r4tz)" ]
 }
 
 @test "linkify: issue= without a project links the bare id" {
-  run lk "issue=vjn8"
+  run lk "issue=r4tz"
   [ "$status" -eq 0 ]
-  [ "$output" = "issue=$(link vjn8 vjn8)" ]
+  [ "$output" = "issue=$(link r4tz r4tz)" ]
 }
 
 @test "linkify: leaves bare ids, words and shas alone" {
-  run lk "p2rg done in commit ca3c89d, see #main"
+  run lk "q7xm done in commit ca3c89d, see #main"
   [ "$status" -eq 0 ]
-  [ "$output" = "p2rg done in commit ca3c89d, see #main" ]
+  [ "$output" = "q7xm done in commit ca3c89d, see #main" ]
 }
 
 @test "linkify: leaves a URL fragment alone" {
@@ -79,9 +79,9 @@ link() {
 }
 
 @test "linkify: leaves an existing OSC 8 target untouched" {
-  run lk "${ESC}]8;;https://kata.invalid/pirula-box/p2rg${OSC_END}pirula-box#p2rg${ESC}]8;;${OSC_END}"
+  run lk "${ESC}]8;;https://kata.invalid/sample-app/q7xm${OSC_END}sample-app#q7xm${ESC}]8;;${OSC_END}"
   [ "$status" -eq 0 ]
-  [[ "$output" == "<ESC>]8;;https://kata.invalid/pirula-box/p2rg<ESC>\\"* ]]
+  [[ "$output" == "<ESC>]8;;https://kata.invalid/sample-app/q7xm<ESC>\\"* ]]
   [[ "$output" == *"<ESC>]8;;<ESC>\\" ]]
 }
 
@@ -117,16 +117,16 @@ link() {
 }
 
 @test "wrapansi: never splits a ref" {
-  run wr 20 "blocked by pirula-box#p2rg and more"
+  run wr 20 "blocked by sample-app#q7xm and more"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pirula-box#p2rg"* ]]
+  [[ "$output" == *"sample-app#q7xm"* ]]
 }
 
 @test "wrapansi: an OSC 8 link survives unbroken" {
-  local id="${ESC}]8;;https://kata.invalid/x/p2rg${OSC_END}x#p2rg${ESC}]8;;${OSC_END}"
+  local id="${ESC}]8;;https://kata.invalid/x/q7xm${OSC_END}x#q7xm${ESC}]8;;${OSC_END}"
   run wrv 20 "aaaa bbbb cccc $id dddd"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"<ESC>]8;;https://kata.invalid/x/p2rg<ESC>\\x#p2rg<ESC>]8;;<ESC>\\"* ]]
+  [[ "$output" == *"<ESC>]8;;https://kata.invalid/x/q7xm<ESC>\\x#q7xm<ESC>]8;;<ESC>\\"* ]]
 }
 
 @test "wrapansi: continuation lines keep the original indent" {
@@ -143,7 +143,7 @@ link() {
 }
 
 @test "wrapansi: leaves multibyte text intact" {
-  run wr 40 "← back to pirula-box#p2rg"
+  run wr 40 "← back to sample-app#q7xm"
   [ "$status" -eq 0 ]
-  [ "$output" = "← back to pirula-box#p2rg" ]
+  [ "$output" = "← back to sample-app#q7xm" ]
 }

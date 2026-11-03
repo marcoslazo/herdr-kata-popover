@@ -14,7 +14,7 @@ setup() {
   run bash "$S" install "$F"
   [[ "$output" == *"up to date"* ]]
   [ "$(grep -c 'kata-popover:start' "$F")" -eq 1 ]
-  grep -q 'https://kata.invalid/pirula-box/p2rg' "$F"
+  grep -q 'https://kata.invalid/sample-app/q7xm' "$F"
   head -3 "$F" | grep -q 'keep this'
 }
 
