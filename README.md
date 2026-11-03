@@ -44,13 +44,22 @@ clicked pane's directory; otherwise the pane shows kata's
 
 The plugin handles clicks; something still has to emit the links.
 
-**Agent output**: tell your agent to write refs as markdown links. In
-`CLAUDE.md`, `AGENTS.md`, or equivalent:
+**Agent output**: agents have to write refs as markdown links, e.g.
+`[pirula-box#p2rg](https://kata.invalid/pirula-box/p2rg)`. The plugin ships a
+script that adds that instruction to your global agent files:
 
-```markdown
-When mentioning a kata issue, write it as a markdown link:
-[pirula-box#p2rg](https://kata.invalid/pirula-box/p2rg) — never bare text.
+```sh
+scripts/agent-instructions.sh install     # or: uninstall, status
+scripts/agent-instructions.sh install path/to/repo/AGENTS.md   # explicit files
 ```
+
+Without arguments it targets the files that already exist among
+`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.config/opencode/AGENTS.md`,
+`~/.pi/agent/AGENTS.md` and `~/.gemini/GEMINI.md`, and never creates one. The
+text sits between `<!-- kata-popover:start/end -->` markers, so re-running it
+refreshes the wording and `uninstall` removes exactly that block. The same is
+available from Herdr as the plugin actions *Kata: add/remove link instruction*.
+Installing the plugin does not run it on its own.
 
 **`kata` CLI output**: `examples/demo-list.sh <project> [args]` pipes
 `kata list --agent` through the same linkifier the pane uses.

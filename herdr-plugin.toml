@@ -11,6 +11,21 @@ title = "Show kata issue"
 contexts = ["pane", "workspace"]
 command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/show-kata.sh\""]
 
+# Opt-in: write/remove the "kata refs as links" instruction in the global agent
+# files (CLAUDE.md, AGENTS.md…). Not a [[build]] step, so installing the plugin
+# never edits your agent config by itself. Output: `herdr plugin log`.
+[[actions]]
+id = "install-agent-instructions"
+title = "Kata: add link instruction to agent files"
+contexts = ["workspace"]
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/agent-instructions.sh\" install"]
+
+[[actions]]
+id = "uninstall-agent-instructions"
+title = "Kata: remove link instruction from agent files"
+contexts = ["workspace"]
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/agent-instructions.sh\" uninstall"]
+
 [[panes]]
 id = "detail"
 title = "Kata"
